@@ -1,0 +1,5 @@
+.idea
+__pycache__
+balances.txt
+venv
+config.py
