@@ -101,6 +101,20 @@ def get_movs():
                                balance=balance * -1,
                                detalles=nombre_usuario_to + " ficha a " + jugador_info)
                 )
+        # roundFinished
+        if data_item_bloque['type'] == 'roundFinished':
+            nombre_jornada = data_item_bloque.get('content').get('round').get('name')
+            resultados = data_item_bloque['content']['results']
+            for resultado in resultados:
+                user_id = str(resultado['user']['id'])
+                user_nombre = ids_usuarios[user_id]
+                dinero = resultado['bonus']
+                movs.append(
+                    movimiento(usuario=user_nombre,
+                               balance = dinero,
+                               detalles=nombre_jornada)
+                )
+
 
     movs_todos = movs_iniciales + movs
     return movs_todos
