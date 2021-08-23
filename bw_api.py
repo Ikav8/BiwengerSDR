@@ -101,6 +101,7 @@ def get_movs():
                                balance=balance * -1,
                                detalles=nombre_usuario_to + " ficha a " + jugador_info)
                 )
+
         # roundFinished
         if data_item_bloque['type'] == 'roundFinished':
             nombre_jornada = data_item_bloque.get('content').get('round').get('name')
@@ -111,8 +112,34 @@ def get_movs():
                 dinero = resultado['bonus']
                 movs.append(
                     movimiento(usuario=user_nombre,
-                               balance = dinero,
+                               balance=dinero,
                                detalles=nombre_jornada)
+                )
+
+
+        # loan (cesion)
+        if data_item_bloque['type'] == 'loan':
+            for loan_item in data_item_bloque['content']:
+                id_usuario_from = str(loan_item['from']['id'])
+                nombre_usuario_from = ids_usuarios[id_usuario_from]
+
+                id_usuario_to = str(loan_item['to']['id'])
+                nombre_usuario_to = ids_usuarios[id_usuario_to]
+
+                jugador_id = loan_item['player']
+                jugador_info = lista_jugadores.get(str(jugador_id))
+
+                detalles = nombre_usuario_from + " cede a " + nombre_usuario_to + " a " + jugador_info
+                dinero = loan_item['amount']
+                movs.append(
+                    movimiento(usuario=nombre_usuario_from,
+                               balance=dinero,
+                               detalles=detalles)
+                )
+                movs.append(
+                    movimiento(usuario=nombre_usuario_to,
+                               balance=dinero * -1,
+                               detalles=detalles)
                 )
 
 
