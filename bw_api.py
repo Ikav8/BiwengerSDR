@@ -47,6 +47,24 @@ def get_jugadores():
 
     return jugadores_dict
 
+def get_liga():
+    url_liga = "https://biwenger.as.com/api/v2/league?include=all&fields=*,standings,tournaments,group,settings(description)"
+    headers = bw_config.BOARD_HEADERS
+    r = requests.get(url=url_liga, headers=headers)
+    json_data = r.json()
+    standings_lista = []
+    for user in json_data['data']['standings']:
+        user_id = str(user['id'])
+        usuario = ids_usuarios[user_id]
+        pts = user['points']
+        nro_jugadores = user['teamSize']
+        valor_equipo = user['teamValue']
+        standings_lista.append([usuario, pts, nro_jugadores, valor_equipo])
+
+    df = pd.DataFrame(standings_lista, columns=['usuario', 'pts', 'nro_jugadores', 'valor_equipo'])
+
+    return df
+
 def get_movs():
 
     url_fichajes = 'https://biwenger.as.com/api/v2/league/764690/board'
@@ -160,10 +178,28 @@ def print_balances():
 
     return output
 
+def get_balances():
+    movs = get_movs()
+    df = pd.DataFrame.from_records([m.to_dict() for m in movs])
+    df['balance'] = df['balance'].astype('int64')
+    df_por_usuario = df.groupby('usuario').sum().sort_values('balance')
+    return df_por_usuario
 
+def get_liga_y_balances():
+    balances = get_balances()
+    liga = get_liga()
+    liga_y_balances = balances.join(liga.set_index('usuario'), on='usuario')
+    liga_y_balances['equipo_mas_saldo'] = liga_y_balances['balance'] + liga_y_balances['valor_equipo']
+    liga_y_balances['dinero_generado'] = liga_y_balances['equipo_mas_saldo'] - bw_config.valor_total
 
+    liga_y_balances['balance'] = liga_y_balances['balance'].astype(float).map('{:,.0f} €'.format)
+    liga_y_balances['valor_equipo'] = liga_y_balances['valor_equipo'].astype(float).map('{:,.0f} €'.format)
+    liga_y_balances['equipo_mas_saldo'] = liga_y_balances['equipo_mas_saldo'].astype(float).map('{:,.0f} €'.format)
+    liga_y_balances['dinero_generado'] = liga_y_balances['dinero_generado'].astype(float).map('{:,.0f} €'.format)
 
+    liga_y_balances = liga_y_balances.sort_values(by='pts', ascending=False)
 
+    return liga_y_balances
 
 
 
